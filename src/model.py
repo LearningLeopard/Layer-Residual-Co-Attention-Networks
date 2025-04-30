@@ -6,6 +6,7 @@ from components.lrcn_costacking import CoStackingLRCN
 from components.lrcn_enc_dec import EncoderDecoderLRCN
 from components.lrcn_pure_stacking import PureStackingLRCN
 from components.multimodal_fusion import MultimodalFusion
+import numpy as np
 
 class LRCN(nn.Module):
     """
@@ -27,10 +28,22 @@ class LRCN(nn.Module):
         super(LRCN, self).__init__()
 
         ## Remaining preprocessing
-        self.downsample = nn.Conv2d(2048, 2048, kernel_size=2, stride=2)    ## For images
-        self.projection = nn.Linear(2048, 512)
+        ## Create Glove Embeddings (Paper says they should be trainable embeddings)
+        # Create embedding matrix from GloVe
+        embedding_matrix = np.load("glove_embedding_matrix.npy")
+
+        # Add embedding as first layer in model
+        self.embed = nn.Embedding.from_pretrained(
+            torch.from_numpy(embedding_matrix), freeze=True
+        )
+
+        ## Text LSTM preprocessing
         self.lstm = torch.nn.LSTM(300, 512, batch_first=True)   ## For text
 
+        ## Image convolution and linear preprocessing
+        self.downsample = nn.Conv2d(2048, 2048, kernel_size=2, stride=2)    ## For images
+        self.projection = nn.Linear(2048, 512)
+        
         if architecture_type == "pure_stacking":
             self.feature_extractor = PureStackingLRCN(
                 num_heads=num_heads,
@@ -93,6 +106,7 @@ class LRCN(nn.Module):
         img_features = img_features.view(1, -1, 512)
 
         ## Remaining preprocessing TEXT
+        text_features = self.embed(text_features)  # [batch, 14, 300]
         text_features, _ = self.lstm(text_features) # Converts to [batch_size, seq_length, 512]
 
         ## Select architecture
