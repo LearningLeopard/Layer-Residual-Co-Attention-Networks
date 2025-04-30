@@ -29,9 +29,9 @@ class ImageFeatureExtractor:
             resnet.layer4
         ).to(self.device).eval()
 
-        self.downsample = nn.Conv2d(2048, 2048, kernel_size=2, stride=2).to(self.device)
-        # self.projection = nn.Conv2d(2048, 512, kernel_size=1).to(self.device)
-        self.projection = nn.Linear(2048, 512).to(self.device)
+        # self.downsample = nn.Conv2d(2048, 2048, kernel_size=2, stride=2).to(self.device)
+        # # self.projection = nn.Conv2d(2048, 512, kernel_size=1).to(self.device)
+        # self.projection = nn.Linear(2048, 512).to(self.device)
 
         # Image preprocessing pipeline
         self.transform = transforms.Compose([
@@ -56,13 +56,13 @@ class ImageFeatureExtractor:
             features = nn.functional.pad(features, (1,1,1,1))
 
         ## Downsample and project
-        features = self.downsample(features)
+        # features = self.downsample(features)
 
-        # Permute to [1, 8, 8, 2048] for linear layer
-        features = features.permute(0, 2, 3, 1).contiguous()
-        # Apply linear projection [1, 8, 8, 512]
-        features = self.projection(features)
-        features = features.view(1, -1, 512)
+        # # Permute to [1, 8, 8, 2048] for linear layer
+        # features = features.permute(0, 2, 3, 1).contiguous()
+        # # Apply linear projection [1, 8, 8, 512]
+        # features = self.projection(features)
+        # features = features.view(1, -1, 512)
 
         ## Features returned are (64, 512)
         return features.squeeze(0).cpu().detach().numpy()
