@@ -38,6 +38,19 @@ def build_vocab_and_answers(train_questions, train_annotations, glove_dict, top_
 
     return word2idx, answer2idx
 
+def build_embedding_matrix(word2idx, glove_dict, embedding_dim=300):
+    """
+    Build an embedding matrix for all words in word2idx using glove_dict.
+    """
+    matrix = np.zeros((len(word2idx), embedding_dim), dtype=np.float32)
+    for word, idx in word2idx.items():
+        if word in glove_dict:
+            matrix[idx] = glove_dict[word]
+        else:
+            # For <pad>, <unk>, or OOV words, use zeros or random
+            matrix[idx] = np.zeros(embedding_dim, dtype=np.float32)
+    return matrix
+
 
 class VQAv2Dataset(Dataset):
     def __init__(self, questions_path, annotations_path, word2idx, answer2idx, feat_dir):
@@ -116,6 +129,7 @@ if __name__=="__main__":
     WORD2IDX_PATH = "word2idx.npy"
     ANSWER2IDX_PATH = "answer2idx.npy"
     GLOVE_PATH = "glove.42B.300d.txt"
+    EMBEDDING_MATRIX_PATH = "glove_embedding_matrix.npy"
 
     TRAINING_ANNOTATIONS = "./data/VQAv2/annotations/v2_mscoco_train2014_annotations.json"
     TRAINING_QUESTIONS = "./data/VQAv2/questions/v2_OpenEnded_mscoco_train2014_questions.json"
@@ -166,6 +180,20 @@ if __name__=="__main__":
         answer2idx=answer2idx,
         feat_dir=VAL_IMAGE_FEATURES_PATH
     )
+
+    # Only build embedding matrix if it doesn't exist
+    # Embedding matrix will be loaded in the model to assign embeddings to the textual features.
+    # Added loading this matrix to model and not preprocessing in case we want to unfreeze (train) the embeddings, paper is not clear on whether they are trained or not
+    if not os.path.exists(EMBEDDING_MATRIX_PATH):
+        print("Building GloVe embedding matrix...")
+        # Load GloVe if not already loaded
+        if 'glove_dict' not in locals():
+            glove_dict = load_glove_embeddings(GLOVE_PATH)
+        embedding_matrix = build_embedding_matrix(word2idx, glove_dict, embedding_dim=300)
+        np.save(EMBEDDING_MATRIX_PATH, embedding_matrix)
+    # else:
+    #     print("Loading existing GloVe embedding matrix...")
+    #     embedding_matrix = np.load(EMBEDDING_MATRIX_PATH)
 
     # # 6. Verify sample
     # img_feat, q_indices, ans_vec = train_dataset[0]
