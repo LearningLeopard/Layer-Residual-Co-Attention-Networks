@@ -116,11 +116,16 @@ if __name__=="__main__":
     WORD2IDX_PATH = "word2idx.npy"
     ANSWER2IDX_PATH = "answer2idx.npy"
     GLOVE_PATH = "glove.42B.300d.txt"
+
     TRAINING_ANNOTATIONS = "./data/VQAv2/annotations/v2_mscoco_train2014_annotations.json"
     TRAINING_QUESTIONS = "./data/VQAv2/questions/v2_OpenEnded_mscoco_train2014_questions.json"
-    IMAGE_FEATURES_PATH = "./data/VQAv2/images/img_features/train2014"
+    TRAINING_IMAGE_FEATURES_PATH = "./data/VQAv2/images/img_features/train2014"
 
-    # 3. Build vocabularies
+    VAL_ANNOTATIONS = "./data/VQAv2/annotations/v2_mscoco_val2014_annotations.json"
+    VAL_QUESTIONS = "./data/VQAv2/questions/v2_OpenEnded_mscoco_val2014_questions.json"
+    VAL_IMAGE_FEATURES_PATH = "./data/VQAv2/images/img_features/val2014"
+
+    # 3. Build vocabularies (chcks if word2idx and answer2idx numpy files already exist)
     if os.path.exists(WORD2IDX_PATH) and os.path.exists(ANSWER2IDX_PATH):
         print("Loading existing vocab files...")
         word2idx = np.load(WORD2IDX_PATH, allow_pickle=True).item()
@@ -151,11 +156,19 @@ if __name__=="__main__":
         annotations_path=TRAINING_ANNOTATIONS,
         word2idx=word2idx,
         answer2idx=answer2idx,
-        feat_dir=IMAGE_FEATURES_PATH
+        feat_dir=TRAINING_IMAGE_FEATURES_PATH
     )
 
-    # 6. Verify sample
-    img_feat, q_indices, ans_vec = train_dataset[0]
-    print(f"Image features: {img_feat.shape}")  # Should be torch.Size([64, 512])
-    print(f"Question indices: {q_indices.shape}")  # torch.Size([14])
-    print(f"Answer vector: {ans_vec.shape}")  # torch.Size([3129])
+    val_dataset = VQAv2Dataset(
+        questions_path=VAL_QUESTIONS,
+        annotations_path=VAL_ANNOTATIONS,
+        word2idx=word2idx,
+        answer2idx=answer2idx,
+        feat_dir=VAL_IMAGE_FEATURES_PATH
+    )
+
+    # # 6. Verify sample
+    # img_feat, q_indices, ans_vec = train_dataset[0]
+    # print(f"Image features: {img_feat.shape}")  # Should be torch.Size([64, 512])
+    # print(f"Question indices: {q_indices.shape}")  # torch.Size([14])
+    # print(f"Answer vector: {ans_vec.shape}")  # torch.Size([3129])
