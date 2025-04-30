@@ -26,6 +26,11 @@ class LRCN(nn.Module):
 
         super(LRCN, self).__init__()
 
+        ## Remaining preprocessing
+        self.downsample = nn.Conv2d(2048, 2048, kernel_size=2, stride=2)    ## For images
+        self.projection = nn.Linear(2048, 512)
+        self.lstm = torch.nn.LSTM(300, 512, batch_first=True)   ## For text
+
         if architecture_type == "pure_stacking":
             self.feature_extractor = PureStackingLRCN(
                 num_heads=num_heads,
@@ -68,7 +73,7 @@ class LRCN(nn.Module):
         
         Args:
             img_features: Image features of shape [batch_size, num_regions, hidden_dim]
-            question_features: Question features of shape [batch_size, seq_length, hidden_dim]
+            text_features: Question features of shape [batch_size, seq_length, 300]
             targets: Optional answer targets for loss calculation
             output_hidden_states: Whether to return intermediate hidden states
         
@@ -77,6 +82,18 @@ class LRCN(nn.Module):
                 'scores': Answer probability scores [batch_size, num_answers]
                 'hidden_states': Intermediate states (if requested)
         """
+        ## Remaining preprocessing IMAGES
+        ## Downsample and project
+        img_features = self.downsample(img_features)
+
+        # Permute to [1, 8, 8, 2048] for linear layer
+        img_features = img_features.permute(0, 2, 3, 1).contiguous()
+        # Apply linear projection [1, 8, 8, 512]
+        img_features = self.projection(img_features)
+        img_features = img_features.view(1, -1, 512)
+
+        ## Remaining preprocessing TEXT
+        text_features, _ = self.lstm(text_features) # Converts to [batch_size, seq_length, 512]
 
         ## Select architecture
         feature_outputs = self.feature_extractor(img_features = img_features, text_features=text_features, output_hidden_states=output_hidden_states)
