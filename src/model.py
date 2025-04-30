@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 from enum import Enum
 from typing import Union, Dict, Optional
-from lrcn_costacking import CoStackingLRCN
-from lrcn_enc_dec import EncoderDecoderLRCN
-from lrcn_pure_stacking import PureStackingLRCN
-from multimodal_fusion import MultimodalFusion
+from components.lrcn_costacking import CoStackingLRCN
+from components.lrcn_enc_dec import EncoderDecoderLRCN
+from components.lrcn_pure_stacking import PureStackingLRCN
+from components.multimodal_fusion import MultimodalFusion
 
 class LRCN(nn.Module):
     """
@@ -113,7 +113,7 @@ class LRCN(nn.Module):
         
         return outputs
     
-def compute_loss(self, scores: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+def compute_loss(scores: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
     """
     Compute the BCE loss for answer prediction.
     
