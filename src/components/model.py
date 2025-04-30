@@ -113,15 +113,15 @@ class LRCN(nn.Module):
         
         return outputs
     
-    def compute_loss(self, scores: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        """
-        Compute the BCE loss for answer prediction.
+def compute_loss(self, scores: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    """
+    Compute the BCE loss for answer prediction.
+    
+    Args:
+        scores: Predicted answer scores [batch_size, num_answers]
+        targets: Ground truth answers [batch_size, num_answers]
         
-        Args:
-            scores: Predicted answer scores [batch_size, num_answers]
-            targets: Ground truth answers [batch_size, num_answers]
-            
-        Returns:
-            BCE loss
-        """
-        return nn.functional.binary_cross_entropy(scores, targets)
+    Returns:
+        BCE loss
+    """
+    return nn.functional.binary_cross_entropy(scores, targets)
